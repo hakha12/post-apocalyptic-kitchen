@@ -28,7 +28,8 @@ class EventManager():
 
 		if callback not in callback_list: return
 
-	
+		callback_list.pop(callback)
+		
 	def set_timer(self, event: int, time: int):
 		pygame.time.set_timer(event, time)
 
