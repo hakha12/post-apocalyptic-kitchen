@@ -15,6 +15,18 @@ class Conveyor(pygame.sprite.Sprite):
 class Presser(pygame.sprite.Sprite):
 	def __init__(self, *groups):
 		super().__init__(*groups)
+
+		self.animation_frames = [pygame.image.load(os.path.join('assets/sprite/presser_1.png')),
+						  		 pygame.image.load(os.path.join('assets/sprite/presser_2.png')),
+						  		 pygame.image.load(os.path.join('assets/sprite/presser_3.png')),]
+		
+		self.image = self.animation_frames[2]
+		self.rect = self.image.get_rect()
+		self.rect.top = 0
+		self.rect.centerx = 854/2
+	
+	def render(self, surface):
+		surface.blit(self.image, self.rect)
 	
 	def on_pressed(self):
 		pass
@@ -24,20 +36,18 @@ class Level(state.State):
 	def __init__(self, manager, event_manager):
 		super().__init__(manager, event_manager)
 
-		self.foods = pygame.sprite.Group()
-		self.prohibited_foods = list(int)
+		self.presser = Presser()
 	
 	def add_food():
 		pass
 
 	def update(self):
-		
+
 
 		return super().update()
 
 	def render(self, surface):
-		for food in self.foods:
-			surface.blit(food.image, food.rect)
+		self.presser.render(surface)
 
 		return super().render(surface)
 	

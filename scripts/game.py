@@ -9,14 +9,13 @@ class Game():
 		self.fps = fps
 
 		self.screen = pygame.display.set_mode((854, 480))
-		self.screen.fill((255, 255, 255))
+		
 
 		self.event_manager = em.EventManager()
 
 		self.user_event_count = 0
 
 		self.clock = pygame.time.Clock()
-		self.callback_list: dict[int, list] = {}
 
 		self.scene_manager = scene.SceneManager(self.event_manager)
 
@@ -31,6 +30,7 @@ class Game():
 		self.scene_manager.late_update()
 
 	def render(self):
+		self.screen.fill((255, 255, 255))
 		self.scene_manager.render(self.screen)
 
 		pygame.display.update()

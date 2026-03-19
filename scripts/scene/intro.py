@@ -22,7 +22,7 @@ class Intro(state.State):
 	
 	def sleep(self):
 		self.event_manager.remove_callback(pygame.INTRO_COUNTDOWN, self.on_countdown)
-		
+
 		return super().sleep()
 	
 	def update(self):
@@ -36,4 +36,4 @@ class Intro(state.State):
 	def on_countdown(self):
 		self.event_manager.set_timer(pygame.INTRO_COUNTDOWN, 0)
 
-		self.state_manager.set_only_current_state("Title")
+		self.state_manager.set_only_current_state("Level")
