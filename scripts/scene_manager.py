@@ -14,5 +14,5 @@ class SceneManager(state.StateManager):
 		self.register_state('Level', level)
 		self.register_state('Pause', pause)
 		
-		self.set_only_current_state('Intro')
+		self.set_only_current_state('Level')
 		

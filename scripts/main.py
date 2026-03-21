@@ -1,7 +1,7 @@
 import game
 
 def main():
-	g = game.Game()
+	g = game.Game(20)
 	
 	while True:
 		g.update()

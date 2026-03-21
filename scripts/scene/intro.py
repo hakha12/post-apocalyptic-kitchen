@@ -8,7 +8,7 @@ class Intro(state.State):
 		
 
 		
-		self.event_manager.set_timer(pygame.INTRO_COUNTDOWN, 2000)
+		
 
 		self.logo = pygame.image.load(os.path.join('assets','sprite','pygame_tiny.png'))
 		self.logo_rect = self.logo.get_rect()
@@ -17,6 +17,8 @@ class Intro(state.State):
 	
 	def awake(self):
 		self.event_manager.add_callback(pygame.INTRO_COUNTDOWN, self.on_countdown)
+
+		self.event_manager.set_timer(pygame.INTRO_COUNTDOWN, 2000)
 
 		return super().awake()
 	

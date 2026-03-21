@@ -11,7 +11,9 @@ class EventManager():
 
 		return pygame.USEREVENT + self.user_event_count
 	
-	def trigger_user_event(self, event: int):
+	def trigger_user_event(self, event_type: int):
+
+		event = pygame.event.Event(event_type)
 		pygame.event.post(event)
 
 	def add_callback(self, event: int, callback):

@@ -1,59 +1,172 @@
 import pygame, state, os
+import scene.boss as boss
 
 # Entity Class
 class Food(pygame.sprite.Sprite):
-	def __init__(self, type: int):
+	def __init__(self, type: int = 0):
 		super().__init__()
 
-		self.image = None
+		self.image = pygame.image.load(os.path.join('assets/sprite/bread.png'))
 		self.rect = self.image.get_rect()
 		self.type = type
-
-class Conveyor(pygame.sprite.Sprite):
-	pass
-
-class Presser(pygame.sprite.Sprite):
-	def __init__(self, *groups):
-		super().__init__(*groups)
-
-		self.animation_frames = [pygame.image.load(os.path.join('assets/sprite/presser_1.png')),
-						  		 pygame.image.load(os.path.join('assets/sprite/presser_2.png')),
-						  		 pygame.image.load(os.path.join('assets/sprite/presser_3.png')),]
 		
-		self.image = self.animation_frames[2]
-		self.rect = self.image.get_rect()
-		self.rect.top = 0
-		self.rect.centerx = 854/2
+		self.pos = pygame.math.Vector2((-100, 300))
+		self.vel = pygame.math.Vector2()
+	
+	def update(self, *args, **kwargs):
+		self.pos += self.vel
+
+		return super().update(*args, **kwargs)
+	
+	def late_update(self):
+		self.rect.center = self.pos
 	
 	def render(self, surface):
 		surface.blit(self.image, self.rect)
 	
-	def on_pressed(self):
+	def on_destroy_food(self):
 		pass
+
+class Conveyor(pygame.sprite.Sprite):
+	def __init__(self, *groups):
+		super().__init__(*groups)
+
+		self.animations = [pygame.image.load(os.path.join('assets/sprite/conveyor_1.png')),
+						  		 pygame.image.load(os.path.join('assets/sprite/conveyor_2.png')),
+						  		 pygame.image.load(os.path.join('assets/sprite/conveyor_3.png')),]
+		
+		self.animation_frame = 0
+
+		self.image = self.animations[0]
+		self.rect = self.image.get_rect()
+		self.rect.bottomleft = [0, 480]
+	
+	def update(self, *args, **kwargs):
+		if self.animation_frame == 2:
+			self.animation_frame = 0
+		else:
+			self.animation_frame += 1
+		
+		self.image = self.animations[self.animation_frame]
+
+	def render(self, surface):
+		surface.blit(self.image, self.rect)
+
+class Presser(state.StateManager):
+	def __init__(self, event_manager):
+		super().__init__(event_manager)
+
+		self.animations = [pygame.image.load(os.path.join('assets/sprite/presser_3.png')),
+					 	   pygame.image.load(os.path.join('assets/sprite/presser_1.png')),
+						   pygame.image.load(os.path.join('assets/sprite/presser_2.png')),]
+		
+		self.animation_frame = 0
+		
+		self.image = self.animations[0]
+		self.rect = self.image.get_rect()
+		self.rect.top = 0
+		self.rect.centerx = 854/2
+
+		self.is_pressed = False
+
+
+	
+	def update(self, *args, **kwargs):
+		if self.is_pressed == True:
+			self.animation_frame += 1
+		
+		self.image = self.animations[self.animation_frame]
+
+		if self.animation_frame == 2:
+			self.animation_frame = 0
+			self.is_pressed = False
+	
+	def render(self, surface):
+		surface.blit(self.image, self.rect)
+	
+	def check_food_collision(self, food_group: pygame.sprite.Group, preference: int):
+		hit = pygame.sprite.spritecollide(self, food_group, False)
+
+		if hit and self.is_pressed:
+			hit[0].kill()
+
+			if hit[0].type == preference:
+				self.event_manager.trigger_user_event(pygame.DESTROY_TARGET_FOOD)
+			else:
+				self.event_manager.trigger_user_event(pygame.DESTROY_PROHIBITED_FOOD)
 
 #Level Class
 class Level(state.State):
 	def __init__(self, manager, event_manager):
 		super().__init__(manager, event_manager)
 
-		self.presser = Presser()
+		self.boss = boss.Boss(event_manager)
+
+		self.conveyor = Conveyor()
+		self.presser = Presser(event_manager)
+
+		self.foods = pygame.sprite.Group()
+
+		pygame.INSERT_FOOD = self.event_manager.add_user_event()
+		pygame.DESTROY_TARGET_FOOD = self.event_manager.add_user_event()
+		pygame.DESTROY_PROHIBITED_FOOD = self.event_manager.add_user_event()
+		pygame.IGNORE_FOOD = self.event_manager.add_user_event()
+		pygame.BOSS_PREFERENCE_CHANGE = self.event_manager.add_user_event()
+
+		self.event_manager.add_callback(pygame.DESTROY_TARGET_FOOD, self.boss.on_destroy_target_food)
+		self.event_manager.add_callback(pygame.DESTROY_PROHIBITED_FOOD, self.boss.on_destroy_prohibited_food)
+		self.event_manager.add_callback(pygame.IGNORE_FOOD, self.boss.on_ignore_food)
+		self.event_manager.add_callback(pygame.BOSS_PREFERENCE_CHANGE, self.boss.on_preference_change)
 	
-	def add_food():
-		pass
+	def awake(self):
+		self.event_manager.add_callback(pygame.INSERT_FOOD, self.on_insert_food)
+		self.event_manager.set_timer(pygame.INSERT_FOOD, 2500)
+
+		return super().awake()
+	
+	def sleep(self):
+		return super().sleep()
 
 	def update(self):
+		self.conveyor.update()
 
+		key = pygame.key.get_pressed()
+
+		if key[pygame.K_SPACE]:
+			self.presser.is_pressed = True
+		preference = self.boss.get_preference()
+		self.presser.update()
+		self.presser.check_food_collision(self.foods, preference)
+
+		for food in self.foods:
+			food.update()
 
 		return super().update()
+	
+	def late_update(self):
+		for food in self.foods:
+			food.late_update()
+		return super().late_update()
 
 	def render(self, surface):
+		surface.fill((0, 0, 0))
+		self.conveyor.render(surface)
+
+		for food in self.foods:
+			food.render(surface)
+
 		self.presser.render(surface)
 
 		return super().render(surface)
 	
-	def on_pressed(self):
-		pass
+	def on_insert_food(self):
+		food = Food()
+		food.vel = pygame.math.Vector2(10, 0)
 
+		self.foods.add(food)
+
+	
+		
 
 class Pause(state.State):
 	def __init__(self, manager, event_manager):
