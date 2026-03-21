@@ -1,14 +1,23 @@
-import pygame, state, os
+import pygame, state, os, random
 import scene.boss as boss
 
 # Entity Class
 class Food(pygame.sprite.Sprite):
+	image_list = [pygame.image.load(os.path.join('assets', 'sprite', 'bread.png')),
+					 	   pygame.image.load(os.path.join('assets', 'sprite', 'cake.png')),
+						   pygame.image.load(os.path.join('assets', 'sprite', 'ice_cream.png')),
+						   pygame.image.load(os.path.join('assets', 'sprite', 'juice.png')),]
+	
 	def __init__(self, type: int = 0):
 		super().__init__()
 
-		self.image = pygame.image.load(os.path.join('assets', 'sprite', 'bread.png'))
-		self.rect = self.image.get_rect()
+		
+
 		self.type = type
+
+		self.image = Food.image_list[type]
+		self.rect = self.image.get_rect()
+		
 		
 		self.pos = pygame.math.Vector2((-100, 300))
 		self.vel = pygame.math.Vector2()
@@ -102,12 +111,19 @@ class Level(state.State):
 	def __init__(self, manager, event_manager):
 		super().__init__(manager, event_manager)
 
+		pygame.mixer.music.load(os.path.join('assets', 'sounds', 'Gameplay.wav'))
+		pygame.mixer.music.set_volume(0.5)
+
 		self.boss = boss.Boss(event_manager)
 
 		self.conveyor = Conveyor()
 		self.presser = Presser(event_manager)
 
 		self.foods = pygame.sprite.Group()
+		preference = self.boss.get_preference()
+		self.preference_food = Food().image_list[preference]
+		self.preference_rect = self.preference_food.get_rect()
+		self.preference_rect.topleft = ((30, 30))
 
 		pygame.INSERT_FOOD = self.event_manager.add_user_event()
 		pygame.DESTROY_TARGET_FOOD = self.event_manager.add_user_event()
@@ -122,7 +138,10 @@ class Level(state.State):
 	
 	def awake(self):
 		self.event_manager.add_callback(pygame.INSERT_FOOD, self.on_insert_food)
-		self.event_manager.set_timer(pygame.INSERT_FOOD, 2500)
+		self.event_manager.set_timer(pygame.INSERT_FOOD, 1500)
+		self.event_manager.set_timer(pygame.BOSS_PREFERENCE_CHANGE, 3500)
+
+		pygame.mixer.music.play(-1)
 
 		return super().awake()
 	
@@ -130,6 +149,7 @@ class Level(state.State):
 		return super().sleep()
 
 	def update(self):
+		self.boss.update()
 		self.conveyor.update()
 
 		key = pygame.key.get_pressed()
@@ -138,6 +158,7 @@ class Level(state.State):
 			self.presser.sound_effect.play()
 			self.presser.is_pressed = True
 		preference = self.boss.get_preference()
+		self.preference_food = Food().image_list[preference]
 		self.presser.update()
 		self.presser.check_food_collision(self.foods, preference)
 
@@ -153,6 +174,8 @@ class Level(state.State):
 
 	def render(self, surface):
 		surface.fill((0, 0, 0))
+		self.boss.render(surface)
+		surface.blit(self.preference_food, self.preference_rect)
 		self.conveyor.render(surface)
 
 		for food in self.foods:
@@ -163,7 +186,8 @@ class Level(state.State):
 		return super().render(surface)
 	
 	def on_insert_food(self):
-		food = Food()
+		type = random.randint(0, 3)
+		food = Food(type)
 		food.vel = pygame.math.Vector2(10, 0)
 
 		self.foods.add(food)
