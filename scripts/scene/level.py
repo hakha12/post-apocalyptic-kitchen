@@ -6,7 +6,7 @@ class Food(pygame.sprite.Sprite):
 	def __init__(self, type: int = 0):
 		super().__init__()
 
-		self.image = pygame.image.load(os.path.join('assets/sprite/bread.png'))
+		self.image = pygame.image.load(os.path.join('assets', 'sprite', 'bread.png'))
 		self.rect = self.image.get_rect()
 		self.type = type
 		
@@ -31,9 +31,9 @@ class Conveyor(pygame.sprite.Sprite):
 	def __init__(self, *groups):
 		super().__init__(*groups)
 
-		self.animations = [pygame.image.load(os.path.join('assets/sprite/conveyor_1.png')),
-						  		 pygame.image.load(os.path.join('assets/sprite/conveyor_2.png')),
-						  		 pygame.image.load(os.path.join('assets/sprite/conveyor_3.png')),]
+		self.animations = [pygame.image.load(os.path.join('assets', 'sprite', 'conveyor_1.png')),
+						  		 pygame.image.load(os.path.join('assets', 'sprite', 'conveyor_2.png')),
+						  		 pygame.image.load(os.path.join('assets', 'sprite', 'conveyor_3.png')),]
 		
 		self.animation_frame = 0
 
@@ -56,9 +56,9 @@ class Presser(state.StateManager):
 	def __init__(self, event_manager):
 		super().__init__(event_manager)
 
-		self.animations = [pygame.image.load(os.path.join('assets/sprite/presser_3.png')),
-					 	   pygame.image.load(os.path.join('assets/sprite/presser_1.png')),
-						   pygame.image.load(os.path.join('assets/sprite/presser_2.png')),]
+		self.animations = [pygame.image.load(os.path.join('assets','sprite', 'presser_3.png')),
+					 	   pygame.image.load(os.path.join('assets', 'sprite', 'presser_1.png')),
+						   pygame.image.load(os.path.join('assets', 'sprite', 'presser_2.png')),]
 		
 		self.animation_frame = 0
 		
@@ -68,6 +68,8 @@ class Presser(state.StateManager):
 		self.rect.centerx = 854/2
 
 		self.is_pressed = False
+
+		self.sound_effect = pygame.mixer.Sound(os.path.join('assets', 'sounds', 'SFX 2.wav'))
 
 
 	
@@ -133,6 +135,7 @@ class Level(state.State):
 		key = pygame.key.get_pressed()
 
 		if key[pygame.K_SPACE]:
+			self.presser.sound_effect.play()
 			self.presser.is_pressed = True
 		preference = self.boss.get_preference()
 		self.presser.update()
