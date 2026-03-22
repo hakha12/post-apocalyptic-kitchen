@@ -61,6 +61,9 @@ class StateManager(Sprite):
 
 		if state_type in self.current_state: return
 
+		for s in self.current_state.values():
+			s.sleep()
+		
 		self.current_state.clear()
 		self.add_state_to_current(state_type)
 

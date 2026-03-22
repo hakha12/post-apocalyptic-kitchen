@@ -16,13 +16,13 @@ class Boss(state.StateManager):
 
 		self.animations = [pygame.image.load(os.path.join('assets','sprite', 'boss_1.png')),
 					 	   pygame.image.load(os.path.join('assets','sprite', 'boss_2.png')),
-						   pygame.image.load(os.path.join('assets','sprite', 'boss_1.png')),]
+						   pygame.image.load(os.path.join('assets','sprite', 'boss_3.png')),]
 		
 		self.animation_frame = 0
 
 		self.image = self.animations[0]
 		self.rect = self.image.get_rect()
-		self.rect.bottomright = ((840, 325))
+		self.rect.bottomright = ((800, 322))
 
 		self.patient_level = 10
 		self.score = 0
@@ -78,16 +78,16 @@ class Default(state.State):
 		if is_prohibited:
 			self.praise_count += 1
 
-			if self.praise_count_count > 2:
-				self.praise_count_count = 0
-				self.state_manager.set_only_current_state('HAPPY') 
+			if self.praise_count > 2:
+				self.praise_count = 0
+				self.state_manager.set_only_current_state('Happy') 
 			return -3
 		else:
 			self.tolerance_count += 1
 
 			if self.tolerance_count > 2:
 				self.tolerance_count = 0
-				self.state_manager.set_only_current_state('ANGRY') 
+				self.state_manager.set_only_current_state('Angry') 
 			return 3
 
 class Angry(state.State):
@@ -95,6 +95,10 @@ class Angry(state.State):
 		super().__init__(manager, event_manager, False, False)
 
 		self.tolerance_count = 0
+
+		self.animations = [pygame.image.load(os.path.join('assets','sprite', 'angy_1.png')),
+					 	   pygame.image.load(os.path.join('assets','sprite', 'angy_2.png')),
+						   pygame.image.load(os.path.join('assets','sprite', 'angy_3.png')),]
 
 	def destroy_food(self, is_prohibited: bool) -> int:
 		if is_prohibited: return -6
@@ -107,8 +111,15 @@ class Happy(state.State):
 		self.tolerance_count = 0
 
 	def destroy_food(self, is_prohibited: bool) -> int:
-		if is_prohibited: return -1
-		else: return 6
+		if is_prohibited: 
+			self.tolerance_count += 1
+
+			if self.tolerance_count > 2:
+				self.tolerance_count = 0
+				self.state_manager.set_only_current_state('Angry') 
+			return 6
+		else: 
+			return -1
 
 class Tutor(state.State):
 	pass

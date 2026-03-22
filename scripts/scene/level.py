@@ -44,11 +44,18 @@ class Conveyor(pygame.sprite.Sprite):
 						  		 pygame.image.load(os.path.join('assets', 'sprite', 'conveyor_2.png')),
 						  		 pygame.image.load(os.path.join('assets', 'sprite', 'conveyor_3.png')),]
 		
+		self.bg_animations = [pygame.image.load(os.path.join('assets','sprite', 'background_1.png')),
+					 	   pygame.image.load(os.path.join('assets','sprite', 'background_2.png')),
+						   pygame.image.load(os.path.join('assets','sprite', 'background_3.png')),]
+		
 		self.animation_frame = 0
 
 		self.image = self.animations[0]
+		self.bg_image = self.bg_animations[0]
 		self.rect = self.image.get_rect()
 		self.rect.bottomleft = [0, 480]
+		self.bg_rect = self.bg_image.get_rect()
+		self.bg_rect.topleft = [0, 0]
 	
 	def update(self, *args, **kwargs):
 		if self.animation_frame == 2:
@@ -57,8 +64,10 @@ class Conveyor(pygame.sprite.Sprite):
 			self.animation_frame += 1
 		
 		self.image = self.animations[self.animation_frame]
+		self.bg_image = self.bg_animations[self.animation_frame]
 
 	def render(self, surface):
+		surface.blit(self.bg_image, self.bg_rect)
 		surface.blit(self.image, self.rect)
 
 class Presser(state.StateManager):
@@ -119,6 +128,8 @@ class Level(state.State):
 		self.conveyor = Conveyor()
 		self.presser = Presser(event_manager)
 
+		
+
 		self.foods = pygame.sprite.Group()
 		preference = self.boss.get_preference()
 		self.preference_food = Food().image_list[preference]
@@ -174,9 +185,12 @@ class Level(state.State):
 
 	def render(self, surface):
 		surface.fill((0, 0, 0))
-		self.boss.render(surface)
-		surface.blit(self.preference_food, self.preference_rect)
+		
+		
 		self.conveyor.render(surface)
+		surface.blit(self.preference_food, self.preference_rect)
+
+		self.boss.render(surface)
 
 		for food in self.foods:
 			food.render(surface)
