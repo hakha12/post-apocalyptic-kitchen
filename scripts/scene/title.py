@@ -13,6 +13,9 @@ class Title(state.State):
 		self.bg_rect = self.bg_image.get_rect()
 		self.bg_rect.topleft = ((0, 0))
 
+		self.title_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Pixel Square Bold10.ttf'), 50)
+		self.subtitle_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Pixel Square 10.ttf'), 20)
+
 		self.sound_effect = pygame.mixer.Sound(os.path.join('assets', 'sounds', 'Title Screen.wav'))
 
 	def awake(self):
@@ -40,9 +43,16 @@ class Title(state.State):
 	def render(self, surface):
 		surface.fill((255, 255, 255))
 		surface.blit(self.bg_image, self.bg_rect)
+
+		
 		
 		overlay = pygame.Surface((854, 480), pygame.SRCALPHA)
 		overlay.fill((124, 63, 0, 120))
 		surface.blit(overlay, (0, 0))
+
+		title = self.title_font.render('WHAT SHOULD I DO HERE?', True, [255, 255, 255])
+		subtitle = self.subtitle_font.render('Press SPACE to START', True, [255, 255, 255])
+		surface.blit(title, (35, 480/2))
+		surface.blit(subtitle, (35, 480/2 + 60))
 
 		return super().render(surface)

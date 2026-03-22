@@ -104,16 +104,16 @@ class Presser(state.StateManager):
 	def render(self, surface):
 		surface.blit(self.image, self.rect)
 	
-	def check_food_collision(self, food_group: pygame.sprite.Group, preference: int):
+	def check_food_collision(self, food_group: pygame.sprite.Group, prohibited: int):
 		hit = pygame.sprite.spritecollide(self, food_group, False)
 
 		if hit and self.is_pressed:
 			hit[0].kill()
 
-			if hit[0].type == preference:
-				self.event_manager.trigger_user_event(pygame.DESTROY_TARGET_FOOD)
-			else:
+			if hit[0].type == prohibited:
 				self.event_manager.trigger_user_event(pygame.DESTROY_PROHIBITED_FOOD)
+			else:
+				self.event_manager.trigger_user_event(pygame.DESTROY_TARGET_FOOD)
 
 #Level Class
 class Level(state.State):
@@ -128,24 +128,26 @@ class Level(state.State):
 		self.conveyor = Conveyor()
 		self.presser = Presser(event_manager)
 
-		
+		self.title_font = pygame.font.Font(os.path.join('assets', 'fonts', 'Pixel Square Bold10.ttf'), 50)
 
 		self.foods = pygame.sprite.Group()
-		preference = self.boss.get_preference()
-		self.preference_food = Food().image_list[preference]
-		self.preference_rect = self.preference_food.get_rect()
-		self.preference_rect.topleft = ((30, 30))
+		prohibited = self.boss.get_preference()
+		self.prohibited_food = Food().image_list[prohibited]
+		self.prohibited_rect = self.prohibited_food.get_rect()
+		self.prohibited_rect.topleft = ((30, 30))
 
 		pygame.INSERT_FOOD = self.event_manager.add_user_event()
 		pygame.DESTROY_TARGET_FOOD = self.event_manager.add_user_event()
 		pygame.DESTROY_PROHIBITED_FOOD = self.event_manager.add_user_event()
 		pygame.IGNORE_FOOD = self.event_manager.add_user_event()
-		pygame.BOSS_PREFERENCE_CHANGE = self.event_manager.add_user_event()
+		
+		pygame.GAME_OVER = self.event_manager.add_user_event()
 
 		self.event_manager.add_callback(pygame.DESTROY_TARGET_FOOD, self.boss.on_destroy_target_food)
 		self.event_manager.add_callback(pygame.DESTROY_PROHIBITED_FOOD, self.boss.on_destroy_prohibited_food)
 		self.event_manager.add_callback(pygame.IGNORE_FOOD, self.boss.on_ignore_food)
 		self.event_manager.add_callback(pygame.BOSS_PREFERENCE_CHANGE, self.boss.on_preference_change)
+		self.event_manager.add_callback(pygame.GAME_OVER, self.on_game_over)
 	
 	def awake(self):
 		self.event_manager.add_callback(pygame.INSERT_FOOD, self.on_insert_food)
@@ -157,6 +159,7 @@ class Level(state.State):
 		return super().awake()
 	
 	def sleep(self):
+		pygame.mixer.music.stop()
 		return super().sleep()
 
 	def update(self):
@@ -168,13 +171,16 @@ class Level(state.State):
 		if key[pygame.K_SPACE]:
 			self.presser.sound_effect.play()
 			self.presser.is_pressed = True
-		preference = self.boss.get_preference()
-		self.preference_food = Food().image_list[preference]
+		prohibited = self.boss.get_preference()
+		self.prohibited_food = Food().image_list[prohibited]
 		self.presser.update()
-		self.presser.check_food_collision(self.foods, preference)
+		self.presser.check_food_collision(self.foods, prohibited)
 
 		for food in self.foods:
 			food.update()
+			if food.pos.x >= 880:
+				food.kill()
+				self.event_manager.trigger_user_event(pygame.IGNORE_FOOD)
 
 		return super().update()
 	
@@ -188,7 +194,7 @@ class Level(state.State):
 		
 		
 		self.conveyor.render(surface)
-		surface.blit(self.preference_food, self.preference_rect)
+		surface.blit(self.prohibited_food, self.prohibited_rect)
 
 		self.boss.render(surface)
 
@@ -197,15 +203,21 @@ class Level(state.State):
 
 		self.presser.render(surface)
 
+		title = self.title_font.render('no', True, [255, 255, 255])
+		surface.blit(title, (120, 30))
+
 		return super().render(surface)
 	
 	def on_insert_food(self):
 		type = random.randint(0, 3)
 		food = Food(type)
-		food.vel = pygame.math.Vector2(10, 0)
+		food.vel = pygame.math.Vector2(30, 0)
 
 		self.foods.add(food)
 
+	def on_game_over(self):
+		self.state_manager.set_only_current_state('Game Over')
+		
 	
 		
 
